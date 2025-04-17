@@ -1,64 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>One-Click GitHub Deployer</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 500px;
-      margin: 50px auto;
-      text-align: center;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 1rem;
-      width: 100%;
-      margin-bottom: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy App</title>
 </head>
 <body>
-  <h1>Deploy Your GitHub Repo</h1>
-  <form id="deployForm">
-    <input type="text" id="repoUrl" placeholder="https://github.com/user/repo" required />
-    <button type="submit">Deploy to Render</button>
-  </form>
-  <div id="result"></div>
+    <h1>Deploy Your App to Render</h1>
+    
+    <form id="deployForm">
+        <label for="repoUrl">GitHub Repo URL:</label>
+        <input type="text" id="repoUrl" name="repoUrl" placeholder="https://github.com/your-user/your-repo" required><br><br>
+        
+        <label for="envKey1">Environment Variable Key 1:</label>
+        <input type="text" id="envKey1" name="envKey1" placeholder="KEY_1"><br><br>
+        
+        <label for="envValue1">Environment Variable Value 1:</label>
+        <input type="text" id="envValue1" name="envValue1" placeholder="VALUE_1"><br><br>
+        
+        <button type="submit">Deploy</button>
+    </form>
 
-  <script>
-    const backendURL = "https://cloudhosting-backend.onrender.com"; // 🔁 Replace with your Render backend URL
+    <script>
+        document.getElementById("deployForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const repoUrl = document.getElementById("repoUrl").value;
+            const envKey1 = document.getElementById("envKey1").value;
+            const envValue1 = document.getElementById("envValue1").value;
 
-    document.getElementById("deployForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const repoUrl = document.getElementById("repoUrl").value;
-      const result = document.getElementById("result");
+            // Prepare the payload to send to the backend
+            const payload = {
+                repoUrl,
+                envVars: []
+            };
 
-      result.innerHTML = "Deploying...";
+            // Add environment variables if they exist
+            if (envKey1 && envValue1) {
+                payload.envVars.push({ key: envKey1, value: envValue1 });
+            }
 
-      try {
-        const res = await fetch(`${backendURL}/deploy`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ repoUrl }),
+            // Send the deployment request to the backend
+            try {
+                const response = await fetch("https://your-backend-url.com/deploy", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (result.dashboardLink) {
+                    alert(`Deployment started! Visit: ${result.dashboardLink}`);
+                } else {
+                    alert(`Deployment failed: ${result.error}`);
+                }
+            } catch (error) {
+                console.error("Error deploying app:", error);
+                alert("An error occurred while deploying.");
+            }
         });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          result.innerHTML = `
-            ✅ Deployment started!<br>
-            <a href="${data.dashboardLink}" target="_blank">View it on Render</a>
-          `;
-        } else {
-          result.innerHTML = `❌ Error: ${data.error}`;
-        }
-      } catch (err) {
-        result.innerHTML = "❌ Unexpected error. Please try again.";
-        console.error(err);
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
